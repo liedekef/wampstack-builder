@@ -4,7 +4,7 @@
 # (Apache + MariaDB + PHP + phpMyAdmin), pinned versions, no installers.
 #
 # Run this on Linux (or WSL). Requires: curl, unzip, zip.
-# Output: build/wampstack-v1.zip
+# Output: build/wampstack.zip
 # ============================================================================
 set -euo pipefail
 
@@ -126,8 +126,8 @@ echo "==> Forcing CRLF line endings on the Windows text files..."
 find "${PKG_DIR}" -type f \( -iname "*.bat" -o -iname "*.conf" -o -iname "*.ini" \) -print0 \
     | xargs -0 sed -i 's/\r$//; s/$/\r/'
 
-echo "==> Packing into wampstack-v1.zip..."
-( cd "${BUILD_DIR}" && zip -r -q wampstack-v1.zip wampstack )
+echo "==> Packing into wampstack.zip..."
+( cd "${BUILD_DIR}" && zip -r -q wampstack.zip wampstack )
 
-echo "==> Done: ${BUILD_DIR}/wampstack-v1.zip"
+echo "==> Done: ${BUILD_DIR}/wampstack.zip"
 echo "    Put this file on the internal webserver for the students."

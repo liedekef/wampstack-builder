@@ -1,11 +1,11 @@
 <?php
 /**
  * phpMyAdmin config for Wampstack Builder.
- * Change $cfg['blowfish_secret'] to something unique for your build
- * (32 random characters will do; it doesn't have to be secret for a
- * local classroom environment, but phpMyAdmin does require a value).
+ * __BLOWFISH_SECRET__ is replaced by install.bat
+ * with a freshly generated random value, so every install gets its own
+ * secret without needing anything changed per build.
  */
-$cfg['blowfish_secret'] = 'change-this-to-32-random-characters!';
+$cfg['blowfish_secret'] = '__BLOWFISH_SECRET__';
 
 $i = 0;
 $i++;

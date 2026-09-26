@@ -22,18 +22,29 @@ if "%BASEDIR:~-1%"=="\" set "BASEDIR=%BASEDIR:~0,-1%"
 set "BASEDIR_FWD=%BASEDIR:\=/%"
 
 echo.
-echo === Step 1/7: unblock files ===
+echo === Step 1/8: unblock files ===
 powershell -NoProfile -Command "Get-ChildItem -Path '%BASEDIR%' -Recurse | Unblock-File" 2>nul
 
 echo.
-echo === Step 2/7: configure httpd.conf and php.ini ===
+echo === Step 2/8: configure httpd.conf and php.ini ===
 powershell -NoProfile -Command ^
   "(Get-Content -Raw '%BASEDIR%\apache24\conf\httpd.conf') -replace '__BASEDIR__', '%BASEDIR_FWD%' | Set-Content -NoNewline '%BASEDIR%\apache24\conf\httpd.conf'"
 powershell -NoProfile -Command ^
   "(Get-Content -Raw '%BASEDIR%\php\php.ini') -replace '__BASEDIR__', '%BASEDIR_FWD%' | Set-Content -NoNewline '%BASEDIR%\php\php.ini'"
 
 echo.
-echo === Step 3/7: initialise the MariaDB data directory ===
+echo === Step 3/8: check phpMyAdmin config and generate unique blowfish secret if needed ===
+set "PMA_CONF=%BASEDIR%\phpmyadmin\config.inc.php"
+if exist "%PMA_CONF%" (
+    findstr /C:"__BLOWFISH_SECRET__" "%PMA_CONF%" >nul 2>&1
+    if !errorlevel! equ 0 (
+        powershell -NoProfile -Command ^
+          "$secret = -join ((48..57)+(65..90)+(97..122) | Get-Random -Count 32 | ForEach-Object { [char]$_ }); (Get-Content -Raw '%PMA_CONF%') -replace '__BLOWFISH_SECRET__', $secret | Set-Content -NoNewline '%PMA_CONF%'"
+    )
+)
+
+echo.
+echo === Step 4/8: initialise the MariaDB data directory ===
 if not exist "%BASEDIR%\mariadb\data\mysql" (
     "%BASEDIR%\mariadb\bin\mariadb-install-db.exe" ^
         --datadir="%BASEDIR%\mariadb\data" ^
@@ -44,7 +55,7 @@ if not exist "%BASEDIR%\mariadb\data\mysql" (
 )
 
 echo.
-echo === Step 4/7: install the MariaDB service ===
+echo === Step 5/8: install the MariaDB service ===
 sc query %SVC_MARIADB% >nul 2>&1
 if %errorlevel% neq 0 (
     "%BASEDIR%\mariadb\bin\mariadbd.exe" --install %SVC_MARIADB% ^
@@ -54,7 +65,7 @@ if %errorlevel% neq 0 (
 )
 
 echo.
-echo === Step 5/7: create a local SSL certificate (own root CA + leaf) ===
+echo === Step 6/8: create a local SSL certificate (own root CA + leaf) ===
 set "SSLDIR=%BASEDIR%\apache24\conf\ssl"
 if not exist "%SSLDIR%" mkdir "%SSLDIR%"
 
@@ -133,7 +144,7 @@ for %%D in (
 )
 
 echo.
-echo === Step 6/7: install the Apache service ===
+echo === Step 7/8: install the Apache service ===
 sc query %SVC_APACHE% >nul 2>&1
 if %errorlevel% neq 0 (
     "%BASEDIR%\apache24\bin\httpd.exe" -k install -n "%SVC_APACHE%" ^
@@ -144,7 +155,7 @@ if %errorlevel% neq 0 (
 
 
 echo.
-echo === Step 7/7: start the services ===
+echo === Step 8/8: start the services ===
 net start %SVC_MARIADB%
 net start %SVC_APACHE%
 

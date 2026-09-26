@@ -1,6 +1,6 @@
 # wampstack-builder
 
-Builds a single zip (`wampstack-v1.zip`) with Apache + MariaDB + PHP +
+Builds a single zip (`wampstack.zip`) with Apache + MariaDB + PHP +
 phpMyAdmin, pinned versions, ready to use on a Windows installation.
 
 ## Usage
@@ -9,18 +9,16 @@ phpMyAdmin, pinned versions, ready to use on a Windows installation.
    top of the script (Apache Lounge, windows.php.net, MariaDB and phpMyAdmin
    change their exact filename per release — always verify this on their
    download pages, see the comments in build.sh).
-2. In `conf-templates/phpmyadmin.config.php` (phpMyAdmin config): change
-  `blowfish_secret` to something unique per build.
-3. Run:
+2. Run:
    ```
    chmod +x build.sh
    ./build.sh
    ```
-4. Result: `build/wampstack-v1.zip`.
+3. Result: `build/wampstack.zip`.
 
 ## Client side
 
-1. Download `wampstack-v1.zip` and extract it (e.g. to `C:\wampstack`).
+1. Download `wampstack.zip` and extract it (e.g. to `C:\wampstack`).
 2. Click `install.bat` (it will try to run with administrator rights).
 3. Done: `http://localhost/` and `http://localhost/phpmyadmin/`
    (also via `https://`; `install.bat` creates a self-signed certificate
@@ -42,7 +40,7 @@ reinstall/test) without touching any data or config.
 - Copies the config from `conf-templates/` over them
 - Fills the service names into `install.bat` / `manage.bat` / `uninstall.bat`
 - Forces CRLF line endings on the Windows text files (.bat/.conf/.ini)
-- Zips everything into `build/wampstack-v1.zip`
+- Zips everything into `build/wampstack.zip`
 
 ## Customizing
 
@@ -58,7 +56,8 @@ reinstall/test) without touching any data or config.
   phpMyAdmin alias). `__BASEDIR__` is automatically replaced by `install.bat`
   with the actual installation path.
 - `conf-templates/php.ini` — which extensions are enabled, timezone, limits.
-- `conf-templates/phpmyadmin.config.php` — phpMyAdmin config. Definitely change
-  `blowfish_secret` to something unique per build.
+- `conf-templates/phpmyadmin.config.php` — phpMyAdmin config.
+  `__BLOWFISH_SECRET__` is replaced by `install.bat` on each install with a
+  freshly generated random value, so nothing to change here per build.
 - `htdocs-template/index.php` — landing page in htdocs; links to phpMyAdmin
   and automatically lists every directory created in htdocs (1 level deep).
