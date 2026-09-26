@@ -1,10 +1,10 @@
 #!/bin/bash
 # ============================================================================
-# build.sh — builds a self-contained "wampstack" zip for Windows students
+# build.sh — builds a self-contained "wampstack" zip for Windows
 # (Apache + MariaDB + PHP + phpMyAdmin), pinned versions, no installers.
 #
 # Run this on Linux (or WSL). Requires: curl, unzip, zip.
-# Output: build/wampstack-v1.zip  -> put this on the internal webserver.
+# Output: build/wampstack-v1.zip
 # ============================================================================
 set -euo pipefail
 

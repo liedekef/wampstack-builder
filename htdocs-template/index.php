@@ -1,9 +1,7 @@
 <?php
 /**
  * Landing page for htdocs. Shows a link to phpMyAdmin and, 1 level
- * deep, a clickable link for every directory a student creates in htdocs
- * — so a student never has to type their own project path into the
- * address bar.
+ * deep, a clickable link for every directory created in htdocs
  */
 
 $base = __DIR__;
