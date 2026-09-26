@@ -9,12 +9,14 @@ phpMyAdmin, pinned versions, ready to use on a Windows installation.
    top of the script (Apache Lounge, windows.php.net, MariaDB and phpMyAdmin
    change their exact filename per release — always verify this on their
    download pages, see the comments in build.sh).
-2. Run:
+2. In `conf-templates/phpmyadmin.config.php` (phpMyAdmin config): change
+  `blowfish_secret` to something unique per build.
+3. Run:
    ```
    chmod +x build.sh
    ./build.sh
    ```
-3. Result: `build/wampstack-v1.zip`.
+4. Result: `build/wampstack-v1.zip`.
 
 ## Client side
 
@@ -56,7 +58,7 @@ reinstall/test) without touching any data or config.
   phpMyAdmin alias). `__BASEDIR__` is automatically replaced by `install.bat`
   with the actual installation path.
 - `conf-templates/php.ini` — which extensions are enabled, timezone, limits.
-- `conf-templates/config.inc.php` — phpMyAdmin config. Definitely change
+- `conf-templates/phpmyadmin.config.php` — phpMyAdmin config. Definitely change
   `blowfish_secret` to something unique per build.
 - `htdocs-template/index.php` — landing page in htdocs; links to phpMyAdmin
   and automatically lists every directory created in htdocs (1 level deep).

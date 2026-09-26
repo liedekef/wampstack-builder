@@ -112,7 +112,7 @@ cp "${SCRIPT_DIR}/htdocs-template/index.php" "${PKG_DIR}/htdocs/index.php"
 echo "==> Placing config templates..."
 cp "${CONF_DIR}/httpd.conf"     "${PKG_DIR}/apache24/conf/httpd.conf"
 cp "${CONF_DIR}/php.ini"        "${PKG_DIR}/php/php.ini"
-cp "${CONF_DIR}/config.inc.php" "${PKG_DIR}/phpmyadmin/config.inc.php"
+cp "${CONF_DIR}/phpmyadmin.config.php" "${PKG_DIR}/phpmyadmin/config.inc.php"
 
 echo "==> Placing bat files..."
 cp ${INSTALL_DIR}/*.bat ${PKG_DIR}/
