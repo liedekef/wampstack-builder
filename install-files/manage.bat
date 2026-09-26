@@ -14,7 +14,7 @@ REM Without arguments (e.g. on double-click): interactive menu.
 REM ============================================================================
 
 REM Service names -- the placeholders below are replaced by build.sh with the
-REM configured service names. No need to edit them by hand anymore.
+REM configured service names.
 set "SVC_APACHE=__SVC_APACHE__"
 set "SVC_MARIADB=__SVC_MARIADB__"
 

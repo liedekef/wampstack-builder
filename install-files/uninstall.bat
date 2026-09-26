@@ -1,13 +1,12 @@
 @echo off
 REM ============================================================================
 REM uninstall.bat - removes the Apache/MariaDB services again.
-REM Right-click -> "Run as administrator".
 REM Data and configuration are left alone; only the services are
 REM stopped and removed.
 REM ============================================================================
 
 REM Service names -- the placeholders below are replaced by build.sh with the
-REM configured service names. No need to edit them by hand anymore.
+REM configured service names.
 set "SVC_APACHE=__SVC_APACHE__"
 set "SVC_MARIADB=__SVC_MARIADB__"
 
