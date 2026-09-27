@@ -166,4 +166,4 @@ echo and http://localhost/phpmyadmin/ (or https://) for phpMyAdmin.
 echo Restart Firefox if it is open, otherwise it takes a moment for the
 echo certificate to become trusted there.
 echo ============================================================
-pause
+if not defined WAMPSTACK_NOPAUSE pause

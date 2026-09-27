@@ -32,4 +32,4 @@ powershell -NoProfile -Command "Get-ChildItem Cert:\LocalMachine\Root | Where-Ob
 echo.
 echo Services and certificate removed.
 echo (Firefox policies.json and the files on disk are left in place.)
-pause
+if not defined WAMPSTACK_NOPAUSE pause

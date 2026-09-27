@@ -128,6 +128,17 @@ find "${PKG_DIR}" -type f \( -iname "*.bat" -o -iname "*.conf" -o -iname "*.ini"
 
 echo "==> Packing into wampstack.zip..."
 ( cd "${BUILD_DIR}" && zip -r -q wampstack.zip wampstack )
-
 echo "==> Done: ${BUILD_DIR}/wampstack.zip"
-echo "    Put this file on the internal webserver for the students."
+
+echo "==> Building the Inno Setup installer (optional)..."
+ISCC="$HOME/.wine/drive_c/Program Files/Inno Setup 7/ISCC.exe"
+if [ -f "${ISCC}" ]; then
+    cp "${SCRIPT_DIR}/install-files/innosetup.iss" "${BUILD_DIR}/wampstack.iss"
+    ( cd "${BUILD_DIR}" && wine "${ISCC}" wampstack.iss )
+    echo "    Also built: ${BUILD_DIR}/wampstack-setup.exe"
+else
+    echo "    Inno Setup not found under Wine (${ISCC}), skipping .exe installer."
+    echo "    One-time setup: wine innosetup-6.x.x.exe /VERYSILENT"
+    echo "    (see installer/wampstack.iss for the installer script itself)."
+fi
+
