@@ -3,6 +3,9 @@ REM ============================================================================
 REM uninstall.bat - removes the Apache/MariaDB services again.
 REM Data and configuration are left alone; only the services are
 REM stopped and removed.
+REM
+REM Pass "nopause" as the first argument to skip the pause at the end; the
+REM setup.exe installer does that so it can read the output.
 REM ============================================================================
 
 REM Service names -- the placeholders below are replaced by build.sh with the
@@ -32,4 +35,4 @@ powershell -NoProfile -Command "Get-ChildItem Cert:\LocalMachine\Root | Where-Ob
 echo.
 echo Services and certificate removed.
 echo (Firefox policies.json and the files on disk are left in place.)
-if not defined WAMPSTACK_NOPAUSE pause
+if /I not "%~1"=="nopause" pause

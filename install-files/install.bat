@@ -3,6 +3,9 @@ setlocal enabledelayedexpansion
 
 REM ============================================================================
 REM install.bat - installs Apache + MariaDB as Windows services.
+REM
+REM Pass "nopause" as the first argument to skip the pause at the end; the
+REM setup.exe installer does that so it can read the output.
 REM ============================================================================
 
 REM Service names -- the placeholders below are replaced by build.sh with the
@@ -166,4 +169,4 @@ echo and http://localhost/phpmyadmin/ (or https://) for phpMyAdmin.
 echo Restart Firefox if it is open, otherwise it takes a moment for the
 echo certificate to become trusted there.
 echo ============================================================
-if not defined WAMPSTACK_NOPAUSE pause
+if /I not "%~1"=="nopause" pause
