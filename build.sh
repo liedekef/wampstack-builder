@@ -112,7 +112,45 @@ cp "${SCRIPT_DIR}/htdocs-template/index.php" "${PKG_DIR}/htdocs/index.php"
 echo "==> Placing config templates..."
 cp "${CONF_DIR}/httpd.conf"     "${PKG_DIR}/apache24/conf/httpd.conf"
 cp "${CONF_DIR}/php.ini"        "${PKG_DIR}/php/php.ini"
+cp "${CONF_DIR}/mariadb.ini"    "${PKG_DIR}/mariadb/my.ini"
 cp "${CONF_DIR}/phpmyadmin.config.php" "${PKG_DIR}/phpmyadmin/config.inc.php"
+
+echo "==> Creating the 'own settings' directories..."
+# Every component reads the files in its own directory in addition to (and
+# after) its main config file, so students can put their own settings there
+# instead of editing a config file that gets replaced on every upgrade.
+# Arguments: directory, which files it reads, example, what to do after a change.
+includedir_readme() {
+    local dir="$1" files="$2" example="$3" after="$4"
+    mkdir -p "${PKG_DIR}/${dir}"
+    {
+        echo "This directory is for your OWN settings, not for the ones that"
+        echo "ship with the stack."
+        echo
+        echo "The main config file of this component reads every $files file in"
+        echo "this directory, in alphabetical order, AFTER itself, so whatever"
+        echo "you put here wins. That is the whole point of this directory: the"
+        echo "main config file is replaced with every new version of the stack,"
+        echo "the files you put in here are not."
+        echo
+        echo "For example:"
+        echo "$example"
+        echo
+        echo "$after"
+    } > "${PKG_DIR}/${dir}/README.txt"
+}
+includedir_readme "apache24/conf/custom" "*.conf" \
+    "    <VirtualHost *:8080> ... </VirtualHost>" \
+    "After changing a file here: manage.bat restart apache"
+includedir_readme "mariadb/conf.d" "*.cnf and *.ini" \
+    "$(printf '    [mariadb]\n    max_connections = 200')" \
+    "After changing a file here: manage.bat restart mariadb"
+includedir_readme "php/conf.d" "*.ini" \
+    "    memory_limit = 1G" \
+    "$(printf 'After changing a file here: manage.bat restart apache\n(install.bat tells the Apache service where this directory is.)')"
+includedir_readme "phpmyadmin/conf.d" "*.php" \
+    "    \$cfg['MaxExactCount'] = false;" \
+    "$(printf 'Nothing to do after changing a file here: phpMyAdmin reads it\non every page request.')"
 
 echo "==> Placing bat files..."
 cp ${INSTALL_DIR}/*.bat ${PKG_DIR}/
@@ -123,7 +161,10 @@ sed -i -e "s|__SVC_APACHE__|${SVC_APACHE}|g" \
        "${PKG_DIR}"/*.bat
 
 echo "==> Forcing CRLF line endings on the Windows text files..."
-find "${PKG_DIR}" -type f \( -iname "*.bat" -o -iname "*.conf" -o -iname "*.ini" \) -print0 \
+# *.txt is in here for the README.txt files of the own-settings directories
+# above, so Notepad shows them like every other text file on Windows.
+find "${PKG_DIR}" -type f \
+    \( -iname "*.bat" -o -iname "*.conf" -o -iname "*.ini" -o -iname "*.txt" \) -print0 \
     | xargs -0 sed -i 's/\r$//; s/$/\r/'
 
 echo "==> Packing into wampstack.zip..."

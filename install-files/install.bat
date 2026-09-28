@@ -29,11 +29,19 @@ echo === Step 1/8: unblock files ===
 powershell -NoProfile -Command "Get-ChildItem -Path '%BASEDIR%' -Recurse | Unblock-File" 2>nul
 
 echo.
-echo === Step 2/8: configure httpd.conf and php.ini ===
+echo === Step 2/8: configure httpd.conf, my.ini and php.ini ===
 powershell -NoProfile -Command ^
   "(Get-Content -Raw '%BASEDIR%\apache24\conf\httpd.conf') -replace '__BASEDIR__', '%BASEDIR_FWD%' | Set-Content -NoNewline '%BASEDIR%\apache24\conf\httpd.conf'"
 powershell -NoProfile -Command ^
-  "(Get-Content -Raw '%BASEDIR%\php\php.ini') -replace '__BASEDIR__', '%BASEDIR_FWD%' | Set-Content -NoNewline '%BASEDIR%\php\php.ini'"
+  "(Get-Content -Raw '%BASEDIR%\mariadb\my.ini') -replace '__BASEDIR__', '%BASEDIR_FWD%' | Set-Content -NoNewline '%BASEDIR%\mariadb\my.ini'"
+powershell -NoProfile -Command ^
+  "(Get-Content -Raw '%BASEDIR%\php\php.ini') -replace '__BASEDIR__', '%BASEDIR_FWD%' | Set-Content -NoNewline '%BASEDIR%\php\php.ini'
+
+REM my.ini reads mariadb\conf.d and PHP reads php\conf.d. If one of those
+REM directories went missing, MariaDB refuses to start (an includedir that
+REM cannot be opened is fatal) and PHP silently ignores its own, so make them.
+if not exist "%BASEDIR%\mariadb\conf.d" mkdir "%BASEDIR%\mariadb\conf.d"
+if not exist "%BASEDIR%\php\conf.d" mkdir "%BASEDIR%\php\conf.d"
 
 echo.
 echo === Step 3/8: check phpMyAdmin config and generate unique blowfish secret if needed ===
@@ -154,6 +162,24 @@ if %errorlevel% neq 0 (
         -f "%BASEDIR%\apache24\conf\httpd.conf"
 ) else (
     echo Service %SVC_APACHE% already exists.
+)
+
+REM php\conf.d\*.ini is PHP's own directory of extra ini files, read after
+REM php.ini. PHP only takes that directory from the PHP_INI_SCAN_DIR
+REM environment variable (mod_php has no httpd.conf directive for it), and a
+REM Windows service only gets environment variables that are listed in its own
+REM registry key: services.exe merges those into the environment of the
+REM service process every time it starts. So register php\conf.d there.
+REM This is done even when the service already existed, because it is read
+REM when the service starts, not when it is installed. httpd.exe -k uninstall
+REM (uninstall.bat) removes the whole service key, value included.
+reg add "HKLM\SYSTEM\CurrentControlSet\Services\%SVC_APACHE%\Environment" ^
+    /v PHP_INI_SCAN_DIR /t REG_MULTI_SZ /d "%BASEDIR_FWD%/php/conf.d" /f >nul
+if errorlevel 1 (
+    echo WARNING: could not register PHP_INI_SCAN_DIR for the Apache service,
+    echo          so php\conf.d\*.ini will NOT be read by PHP.
+) else (
+    echo php\conf.d registered as PHP_INI_SCAN_DIR for %SVC_APACHE%.
 )
 
 
