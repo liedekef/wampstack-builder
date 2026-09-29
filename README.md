@@ -85,6 +85,14 @@ Two things worth knowing:
 
 - Verify/change the versions for Apache, MariaDB, PHPi and phpMyAdmin in
   `build.sh`
+- **`build.config`** — optional, plain shell assignments that are sourced right
+  after the defaults in `build.sh`, so they override them:
+  ```
+  SVC_APACHE="Course_Apache"
+  SVC_MARIADB="Course_MariaDB"
+  ```
+  Put YOUR settings here instead of in `build.sh`, so updating wampstack-builder
+  (`git pull`) never overwrites them.
 - **Service names** — `SVC_APACHE` and `SVC_MARIADB` in `build.sh` (defaults
   `WAMP_Apache` and `WAMP_MariaDB`). They are substituted for the
   `__SVC_APACHE__` / `__SVC_MARIADB__` placeholders in `install-files/*.bat`

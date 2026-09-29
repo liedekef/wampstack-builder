@@ -39,6 +39,25 @@ PMA_URL="https://files.phpmyadmin.net/phpMyAdmin/${PMA_VER}/phpMyAdmin-${PMA_VER
 SVC_APACHE="WAMP_Apache"
 SVC_MARIADB="WAMP_MariaDB"
 
+# ---------------------------------------------------------------------------
+# 2b. OPTIONAL build.config
+#     Sourced after the defaults above, so anything assigned in it wins. Use
+#     this for the settings that are YOURS (service names, pinned versions),
+#     instead of editing this script: a git pull/update of wampstack-builder
+#     then overwrites build.sh but leaves build.config alone.
+#     Plain shell assignments, e.g.:
+#         SVC_APACHE="Course_Apache"
+#         SVC_MARIADB="Course_MariaDB"
+#         APACHE_VER="2.4.69"
+#         APACHE_URL="https://.../httpd-${APACHE_VER}-...zip"
+# ---------------------------------------------------------------------------
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BUILD_CONFIG="${SCRIPT_DIR}/build.config"
+if [ -f "${BUILD_CONFIG}" ]; then
+    echo "==> Reading overrides from ${BUILD_CONFIG}..."
+    . "${BUILD_CONFIG}"
+fi
+
 validate_svc_name() {
     if ! printf '%s' "${2}" | grep -qE '^[A-Za-z0-9_.-]{1,64}$'; then
         echo "ERROR: ${1} is not a valid Windows service name: '${2}'" >&2
@@ -50,9 +69,8 @@ validate_svc_name "SVC_APACHE"  "${SVC_APACHE}"
 validate_svc_name "SVC_MARIADB" "${SVC_MARIADB}"
 
 # ---------------------------------------------------------------------------
-# 3. Paths
+# 3. Paths (SCRIPT_DIR itself is set further up, where build.config is read)
 # ---------------------------------------------------------------------------
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BUILD_DIR="${SCRIPT_DIR}/build"
 DOWNLOAD_DIR="${BUILD_DIR}/downloads"
 PKG_DIR="${BUILD_DIR}/wampstack"
