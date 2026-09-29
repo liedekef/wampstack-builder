@@ -35,7 +35,7 @@ powershell -NoProfile -Command ^
 powershell -NoProfile -Command ^
   "(Get-Content -Raw '%BASEDIR%\mariadb\my.ini') -replace '__BASEDIR__', '%BASEDIR_FWD%' | Set-Content -NoNewline '%BASEDIR%\mariadb\my.ini'"
 powershell -NoProfile -Command ^
-  "(Get-Content -Raw '%BASEDIR%\php\php.ini') -replace '__BASEDIR__', '%BASEDIR_FWD%' | Set-Content -NoNewline '%BASEDIR%\php\php.ini'
+  "(Get-Content -Raw '%BASEDIR%\php\php.ini') -replace '__BASEDIR__', '%BASEDIR_FWD%' | Set-Content -NoNewline '%BASEDIR%\php\php.ini'"
 
 REM my.ini reads mariadb\conf.d and PHP reads php\conf.d. If one of those
 REM directories went missing, MariaDB refuses to start (an includedir that
@@ -173,8 +173,8 @@ REM service process every time it starts. So register php\conf.d there.
 REM This is done even when the service already existed, because it is read
 REM when the service starts, not when it is installed. httpd.exe -k uninstall
 REM (uninstall.bat) removes the whole service key, value included.
-reg add "HKLM\SYSTEM\CurrentControlSet\Services\%SVC_APACHE%\Environment" ^
-    /v PHP_INI_SCAN_DIR /t REG_MULTI_SZ /d "%BASEDIR_FWD%/php/conf.d" /f >nul
+reg add "HKLM\SYSTEM\CurrentControlSet\Services\%SVC_APACHE%" ^
+    /v Environment /t REG_MULTI_SZ /d "PHP_INI_SCAN_DIR=%BASEDIR_FWD%/php/conf.d" /f >nul
 if errorlevel 1 (
     echo WARNING: could not register PHP_INI_SCAN_DIR for the Apache service,
     echo          so php\conf.d\*.ini will NOT be read by PHP.
