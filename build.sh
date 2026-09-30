@@ -197,7 +197,7 @@ if [ -f "${ISCC}" ]; then
     echo "    Also built: ${BUILD_DIR}/wampstack-setup.exe"
 else
     echo "    Inno Setup not found under Wine (${ISCC}), skipping .exe installer."
-    echo "    One-time setup: wine innosetup-6.x.x.exe /VERYSILENT"
+    echo "    One-time setup: wine innosetup-7.x.x.exe /VERYSILENT"
     echo "    (see installer/wampstack.iss for the installer script itself)."
 fi
 

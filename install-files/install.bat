@@ -25,11 +25,11 @@ if "%BASEDIR:~-1%"=="\" set "BASEDIR=%BASEDIR:~0,-1%"
 set "BASEDIR_FWD=%BASEDIR:\=/%"
 
 echo.
-echo === Step 1/8: unblock files ===
+echo === Step 1/9: unblock files ===
 powershell -NoProfile -Command "Get-ChildItem -Path '%BASEDIR%' -Recurse | Unblock-File" 2>nul
 
 echo.
-echo === Step 2/8: configure httpd.conf, my.ini and php.ini ===
+echo === Step 2/9: configure httpd.conf, my.ini and php.ini ===
 powershell -NoProfile -Command ^
   "(Get-Content -Raw '%BASEDIR%\apache24\conf\httpd.conf') -replace '__BASEDIR__', '%BASEDIR_FWD%' | Set-Content -NoNewline '%BASEDIR%\apache24\conf\httpd.conf'"
 powershell -NoProfile -Command ^
@@ -44,7 +44,7 @@ if not exist "%BASEDIR%\mariadb\conf.d" mkdir "%BASEDIR%\mariadb\conf.d"
 if not exist "%BASEDIR%\php\conf.d" mkdir "%BASEDIR%\php\conf.d"
 
 echo.
-echo === Step 3/8: check phpMyAdmin config and generate unique blowfish secret if needed ===
+echo === Step 3/9: check phpMyAdmin config and generate unique blowfish secret if needed ===
 set "PMA_CONF=%BASEDIR%\phpmyadmin\config.inc.php"
 if exist "%PMA_CONF%" (
     findstr /C:"__BLOWFISH_SECRET__" "%PMA_CONF%" >nul 2>&1
@@ -55,7 +55,7 @@ if exist "%PMA_CONF%" (
 )
 
 echo.
-echo === Step 4/8: initialise the MariaDB data directory ===
+echo === Step 4/9: initialise the MariaDB data directory ===
 if not exist "%BASEDIR%\mariadb\data\mysql" (
     "%BASEDIR%\mariadb\bin\mariadb-install-db.exe" ^
         --datadir="%BASEDIR%\mariadb\data" ^
@@ -66,7 +66,7 @@ if not exist "%BASEDIR%\mariadb\data\mysql" (
 )
 
 echo.
-echo === Step 5/8: install the MariaDB service ===
+echo === Step 5/9: install the MariaDB service ===
 sc query %SVC_MARIADB% >nul 2>&1
 if %errorlevel% neq 0 (
     "%BASEDIR%\mariadb\bin\mariadbd.exe" --install %SVC_MARIADB% ^
@@ -76,7 +76,7 @@ if %errorlevel% neq 0 (
 )
 
 echo.
-echo === Step 6/8: create a local SSL certificate (own root CA + leaf) ===
+echo === Step 6/9: create a local SSL certificate (own root CA + leaf) ===
 set "SSLDIR=%BASEDIR%\apache24\conf\ssl"
 if not exist "%SSLDIR%" mkdir "%SSLDIR%"
 
@@ -155,7 +155,7 @@ for %%D in (
 )
 
 echo.
-echo === Step 7/8: install the Apache service ===
+echo === Step 7/9: install the Apache service ===
 sc query %SVC_APACHE% >nul 2>&1
 if %errorlevel% neq 0 (
     "%BASEDIR%\apache24\bin\httpd.exe" -k install -n "%SVC_APACHE%" ^
@@ -184,8 +184,23 @@ if errorlevel 1 (
 
 
 echo.
-echo === Step 8/8: start the services ===
+echo === Step 8/9: start MariaDB and set up phpMyAdmin's configuration storage ===
 net start %SVC_MARIADB%
+
+REM Creates the "phpmyadmin" database + pma__* tables phpMyAdmin uses for
+REM saved preferences, bookmarks, relations, etc ("configuration storage" /
+REM ZeroConf -- phpMyAdmin auto-detects and uses them once they exist,
+REM nothing to set in config.inc.php). The script itself uses IF NOT EXISTS
+REM throughout, so re-running it on every install/upgrade is safe.
+if exist "%BASEDIR%\phpmyadmin\sql\create_tables.sql" (
+    "%BASEDIR%\mariadb\bin\mariadb.exe" -u root < "%BASEDIR%\phpmyadmin\sql\create_tables.sql"
+) else (
+    echo WARNING: phpmyadmin\sql\create_tables.sql not found, skipping
+    echo          phpMyAdmin configuration storage setup.
+)
+
+echo.
+echo === Step 9/9: start Apache ===
 net start %SVC_APACHE%
 
 echo.
