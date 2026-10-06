@@ -1,7 +1,8 @@
 # wampstack-builder
 
 Builds a single zip (`wampstack.zip`) with Apache + MariaDB + PHP +
-phpMyAdmin, pinned versions, ready to use on a Windows installation.
+phpMyAdmin, pinned versions, ready to use on a Windows installation. When
+`7z` is installed, it also produces `build/wampstack.7z` (smaller archive).
 
 ## Usage
 
@@ -14,7 +15,8 @@ phpMyAdmin, pinned versions, ready to use on a Windows installation.
    chmod +x build.sh
    ./build.sh
    ```
-3. Result: `build/wampstack.zip`.
+3. Result: `build/wampstack.zip` (and `build/wampstack.7z` if `7z` is
+   available).
 
 ## Client side
 
@@ -41,7 +43,8 @@ reinstall/test) without touching any data or config.
   "own settings" directories (see below)
 - Fills the service names into `install.bat` / `manage.bat` / `uninstall.bat`
 - Forces CRLF line endings on the Windows text files (.bat/.conf/.ini/.txt)
-- Zips everything into `build/wampstack.zip`
+- Zips everything into `build/wampstack.zip`, and packs `build/wampstack.7z`
+  with 7-Zip when `7z`/`7za` is installed
 
 ## Client-side own settings (conf.d per component)
 

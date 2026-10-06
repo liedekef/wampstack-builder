@@ -3,8 +3,8 @@
 # build.sh — builds a self-contained "wampstack" zip for Windows
 # (Apache + MariaDB + PHP + phpMyAdmin), pinned versions, no installers.
 #
-# Run this on Linux (or WSL). Requires: curl, unzip, zip.
-# Output: build/wampstack.zip
+# Run this on Linux (or WSL). Requires: curl, unzip, zip (7z optional).
+# Output: build/wampstack.zip and build/wampstack.7z
 # ============================================================================
 set -euo pipefail
 
@@ -188,6 +188,15 @@ find "${PKG_DIR}" -type f \
 echo "==> Packing into wampstack.zip..."
 ( cd "${BUILD_DIR}" && zip -r -q wampstack.zip wampstack )
 echo "==> Done: ${BUILD_DIR}/wampstack.zip"
+
+echo "==> Packing into wampstack.7z..."
+if command -v 7z >/dev/null 2>&1 || command -v 7za >/dev/null 2>&1; then
+    SEVENZIP="$(command -v 7z || command -v 7za)"
+    ( cd "${BUILD_DIR}" && "${SEVENZIP}" a -t7z -mx=5 wampstack.7z wampstack )
+    echo "==> Done: ${BUILD_DIR}/wampstack.7z"
+else
+    echo "    7z not found, skipping wampstack.7z (install p7zip-full / 7zip)."
+fi
 
 echo "==> Building the Inno Setup installer (optional)..."
 ISCC="$HOME/.wine/drive_c/Program Files/Inno Setup 7/ISCC.exe"
