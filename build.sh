@@ -16,6 +16,7 @@ set -euo pipefail
 #      - PHP:    https://windows.php.net/download/        (x64 Thread Safe zip)
 #      - MariaDB:https://mariadb.org/download/             (Windows, zip, x86_64)
 #      - phpMyAdmin: https://www.phpmyadmin.net/downloads/ (all-languages.zip)
+#      - VC redistributable: Apache needs the correct one ...
 # ---------------------------------------------------------------------------
 APACHE_VER="2.4.68"
 APACHE_URL="https://www.apachelounge.com/download/VS18/binaries/httpd-${APACHE_VER}-260920-Win64-VS18.zip"
@@ -28,6 +29,10 @@ MARIADB_URL="https://archive.mariadb.org/mariadb-${MARIADB_VER}/winx64-packages/
 
 PMA_VER="5.2.3"
 PMA_URL="https://files.phpmyadmin.net/phpMyAdmin/${PMA_VER}/phpMyAdmin-${PMA_VER}-all-languages.zip"
+
+# The Visual Studio build of Apache above needs the Visual C++ Redistributable
+VC_REDIST_URL="https://aka.ms/vc14/vc_redist.x64.exe"
+VC_REDIST_MIN_BLD="36247"
 
 # ---------------------------------------------------------------------------
 # 2. WINDOWS SERVICE NAMES
@@ -85,6 +90,7 @@ curl -fL -o "${DOWNLOAD_DIR}/apache.zip"     "${APACHE_URL}"
 curl -fL -o "${DOWNLOAD_DIR}/php.zip"        "${PHP_URL}"
 curl -fL -o "${DOWNLOAD_DIR}/mariadb.zip"    "${MARIADB_URL}"
 curl -fL -o "${DOWNLOAD_DIR}/phpmyadmin.zip" "${PMA_URL}"
+curl -fL -o "${DOWNLOAD_DIR}/vc_redist.x64.exe" "${VC_REDIST_URL}"
 
 # ---------------------------------------------------------------------------
 # Helper: unzip an archive and "flatten" it when it contains exactly 1
@@ -173,9 +179,14 @@ includedir_readme "phpmyadmin/conf.d" "*.php" \
 echo "==> Placing bat files..."
 cp ${INSTALL_DIR}/*.bat ${PKG_DIR}/
 
-echo "==> Filling in the service names..."
+echo "==> Bundling the Visual C++ Redistributable..."
+cp "${DOWNLOAD_DIR}/vc_redist.x64.exe" "${PKG_DIR}/vc_redist.x64.exe"
+
+echo "==> Filling in the service names and redistributable settings..."
 sed -i -e "s|__SVC_APACHE__|${SVC_APACHE}|g" \
        -e "s|__SVC_MARIADB__|${SVC_MARIADB}|g" \
+       -e "s|__VC_REDIST_URL__|${VC_REDIST_URL}|g" \
+       -e "s|__VC_REDIST_MIN_BLD__|${VC_REDIST_MIN_BLD}|g" \
        "${PKG_DIR}"/*.bat
 
 echo "==> Forcing CRLF line endings on the Windows text files..."

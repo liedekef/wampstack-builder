@@ -27,6 +27,13 @@ phpMyAdmin, pinned versions, ready to use on a Windows installation. When
    and imports it into the Windows trusted root store, so no browser
    warning, also corrects Firefox via a policies.json file).
 
+The Visual Studio build of Apache needs Microsoft's **Visual C++
+Redistributable for Visual Studio 2017-2026 (x64)**. `install.bat` checks for it
+first and, only when it is missing or older than the build Apache was compiled
+with, silently runs the bundled `vc_redist.x64.exe` (the v14 runtime is an
+in-place cumulative update, so an equal or newer version is used as-is and never
+replaced). A reboot may be requested if a just-installed runtime needs it.
+
 `manage.bat` starts, stops, restarts and queries the two services — just a
 handy script to control the services. Run it without arguments for an
 interactive menu, or from the command line,
@@ -37,11 +44,13 @@ reinstall/test) without touching any data or config.
 
 ## What build.sh does
 
-- Downloads the 4 components
+- Downloads the 4 components plus `vc_redist.x64.exe` (Microsoft Visual C++
+  Redistributable 2017-2026 x64, required by Apache)
 - Unpacks them into `apache24/`, `php/`, `mariadb/`, `phpmyadmin/`
 - Copies the config from `conf-templates/` over them, and creates the four
   "own settings" directories (see below)
-- Fills the service names into `install.bat` / `manage.bat` / `uninstall.bat`
+- Fills the service names and the redistributable URL/minimum-build into
+  `install.bat` / `manage.bat` / `uninstall.bat`
 - Forces CRLF line endings on the Windows text files (.bat/.conf/.ini/.txt)
 - Zips everything into `build/wampstack.zip`, and packs `build/wampstack.7z`
   with 7-Zip when `7z`/`7za` is installed

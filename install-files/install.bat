@@ -25,11 +25,56 @@ if "%BASEDIR:~-1%"=="\" set "BASEDIR=%BASEDIR:~0,-1%"
 set "BASEDIR_FWD=%BASEDIR:\=/%"
 
 echo.
-echo === Step 1/9: unblock files ===
+echo === Step 1/10: check the Microsoft Visual C++ Redistributable (x64) ===
+REM Apache Lounge builds Apache with Visual Studio, so httpd.exe needs the
+REM Visual C++ 2017-2026 (v14) runtime (vcruntime140.dll etc.). The v14
+REM redistributable is an in-place cumulative update and backwards compatible,
+REM so an equal or newer installed version already satisfies Apache and must
+REM NOT be replaced. Only install the bundled one when the registry says it is
+REM missing or OLDER than the build Apache was compiled with.
+REM The 64-bit registry view is read explicitly (Registry64): under Inno Setup
+REM the batch runs from 32-bit cmd, which would otherwise be redirected to
+REM WOW6432Node, where the x64 runtime is not registered.
+set "VC_REDIST_URL=__VC_REDIST_URL__"
+set "VC_REDIST_MIN_BLD=__VC_REDIST_MIN_BLD__"
+set "VC_NEEDED=1"
+powershell -NoProfile -Command ^
+  "$key = [Microsoft.Win32.RegistryKey]::OpenBaseKey([Microsoft.Win32.RegistryHive]::LocalMachine, [Microsoft.Win32.RegistryView]::Registry64).OpenSubKey('SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64'); if ($key) { if (($key.GetValue('Installed') -eq 1) -and ([int]($key.GetValue('Bld')) -ge %VC_REDIST_MIN_BLD%)) { exit 0 } }; exit 1"
+if !errorlevel! equ 0 set "VC_NEEDED=0"
+
+if "!VC_NEEDED!"=="1" (
+    if not exist "%BASEDIR%\vc_redist.x64.exe" (
+        echo vc_redist.x64.exe is not bundled; downloading it from %VC_REDIST_URL% ...
+        powershell -NoProfile -Command "Invoke-WebRequest -Uri '%VC_REDIST_URL%' -OutFile '%BASEDIR%\vc_redist.x64.exe'"
+    )
+    if exist "%BASEDIR%\vc_redist.x64.exe" (
+        echo Installing the Visual C++ Redistributable ^(x64^) ...
+        "%BASEDIR%\vc_redist.x64.exe" /install /quiet /norestart
+        set "VC_RC=!errorlevel!"
+        if !VC_RC! equ 0 (
+            echo Visual C++ Redistributable installed.
+        ) else if !VC_RC! equ 1638 (
+            echo A newer Visual C++ Redistributable is already installed.
+        ) else if !VC_RC! equ 3010 (
+            echo Visual C++ Redistributable installed; a REBOOT is required.
+        ) else (
+            echo WARNING: the Visual C++ Redistributable installer returned !VC_RC!.
+            echo          Apache may fail to start without it.
+        )
+    ) else (
+        echo WARNING: could not obtain the Visual C++ Redistributable.
+        echo          Apache may fail to start without it.
+    )
+) else (
+    echo Visual C++ Redistributable x64 is already installed and not older, skipping.
+)
+
+echo.
+echo === Step 2/10: unblock files ===
 powershell -NoProfile -Command "Get-ChildItem -Path '%BASEDIR%' -Recurse | Unblock-File" 2>nul
 
 echo.
-echo === Step 2/9: configure httpd.conf, my.ini and php.ini ===
+echo === Step 3/10: configure httpd.conf, my.ini and php.ini ===
 powershell -NoProfile -Command ^
   "(Get-Content -Raw '%BASEDIR%\apache24\conf\httpd.conf') -replace '__BASEDIR__', '%BASEDIR_FWD%' | Set-Content -NoNewline '%BASEDIR%\apache24\conf\httpd.conf'"
 powershell -NoProfile -Command ^
@@ -44,7 +89,7 @@ if not exist "%BASEDIR%\mariadb\conf.d" mkdir "%BASEDIR%\mariadb\conf.d"
 if not exist "%BASEDIR%\php\conf.d" mkdir "%BASEDIR%\php\conf.d"
 
 echo.
-echo === Step 3/9: check phpMyAdmin config and generate unique blowfish secret if needed ===
+echo === Step 4/10: check phpMyAdmin config and generate unique blowfish secret if needed ===
 set "PMA_CONF=%BASEDIR%\phpmyadmin\config.inc.php"
 if exist "%PMA_CONF%" (
     findstr /C:"__BLOWFISH_SECRET__" "%PMA_CONF%" >nul 2>&1
@@ -55,7 +100,7 @@ if exist "%PMA_CONF%" (
 )
 
 echo.
-echo === Step 4/9: initialise the MariaDB data directory ===
+echo === Step 5/10: initialise the MariaDB data directory ===
 if not exist "%BASEDIR%\mariadb\data\mysql" (
     "%BASEDIR%\mariadb\bin\mariadb-install-db.exe" ^
         --datadir="%BASEDIR%\mariadb\data" ^
@@ -66,7 +111,7 @@ if not exist "%BASEDIR%\mariadb\data\mysql" (
 )
 
 echo.
-echo === Step 5/9: install the MariaDB service ===
+echo === Step 6/10: install the MariaDB service ===
 sc query %SVC_MARIADB% >nul 2>&1
 if %errorlevel% neq 0 (
     "%BASEDIR%\mariadb\bin\mariadbd.exe" --install %SVC_MARIADB% ^
@@ -76,7 +121,7 @@ if %errorlevel% neq 0 (
 )
 
 echo.
-echo === Step 6/9: create a local SSL certificate (own root CA + leaf) ===
+echo === Step 7/10: create a local SSL certificate (own root CA + leaf) ===
 set "SSLDIR=%BASEDIR%\apache24\conf\ssl"
 if not exist "%SSLDIR%" mkdir "%SSLDIR%"
 
@@ -155,7 +200,7 @@ for %%D in (
 )
 
 echo.
-echo === Step 7/9: install the Apache service ===
+echo === Step 8/10: install the Apache service ===
 sc query %SVC_APACHE% >nul 2>&1
 if %errorlevel% neq 0 (
     "%BASEDIR%\apache24\bin\httpd.exe" -k install -n "%SVC_APACHE%" ^
@@ -184,7 +229,7 @@ if errorlevel 1 (
 
 
 echo.
-echo === Step 8/9: start MariaDB and set up phpMyAdmin's configuration storage ===
+echo === Step 9/10: start MariaDB and set up phpMyAdmin's configuration storage ===
 net start %SVC_MARIADB%
 
 REM Creates the "phpmyadmin" database + pma__* tables phpMyAdmin uses for
@@ -200,7 +245,7 @@ if exist "%BASEDIR%\phpmyadmin\sql\create_tables.sql" (
 )
 
 echo.
-echo === Step 9/9: start Apache ===
+echo === Step 10/10: start Apache ===
 net start %SVC_APACHE%
 
 echo.
