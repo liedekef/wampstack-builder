@@ -48,15 +48,18 @@ if "!VC_NEEDED!"=="1" (
         powershell -NoProfile -Command "Invoke-WebRequest -Uri '%VC_REDIST_URL%' -OutFile '%BASEDIR%\vc_redist.x64.exe'"
     )
     if exist "%BASEDIR%\vc_redist.x64.exe" (
-        echo Installing the Visual C++ Redistributable ^(x64^) ...
+        echo Installing the Visual C++ Redistributable ^(x64^) , please wait ...
         "%BASEDIR%\vc_redist.x64.exe" /install /quiet /norestart
         set "VC_RC=!errorlevel!"
         if !VC_RC! equ 0 (
             echo Visual C++ Redistributable installed.
+            del "%BASEDIR%\vc_redist.x64.exe" >nul 2>&1
         ) else if !VC_RC! equ 1638 (
             echo A newer Visual C++ Redistributable is already installed.
+            del "%BASEDIR%\vc_redist.x64.exe" >nul 2>&1
         ) else if !VC_RC! equ 3010 (
             echo Visual C++ Redistributable installed; a REBOOT is required.
+            del "%BASEDIR%\vc_redist.x64.exe" >nul 2>&1
         ) else (
             echo WARNING: the Visual C++ Redistributable installer returned !VC_RC!.
             echo          Apache may fail to start without it.
