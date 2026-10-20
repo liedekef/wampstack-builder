@@ -32,7 +32,21 @@ net stop %SVC_MARIADB% 2>nul
 echo Removing the certificate from the Windows trusted root store...
 powershell -NoProfile -Command "Get-ChildItem Cert:\LocalMachine\Root | Where-Object { $_.Subject -eq 'CN=Wampstack Builder Local CA' } | Remove-Item -Force" 2>nul
 
+echo Removing the PHP directory from the Windows system PATH...
+powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+  "$phpDir = '%BASEDIR%\php';" ^
+  "$machinePath = [Environment]::GetEnvironmentVariable('Path', 'Machine');" ^
+  "if ([string]::IsNullOrEmpty($machinePath)) { exit 0 }" ^
+  "$parts = $machinePath -split ';' | Where-Object { $_ -ne '' };" ^
+  "$filtered = $parts | Where-Object { $_.TrimEnd('\') -ine $phpDir.TrimEnd('\') };" ^
+  "if ($filtered.Count -eq $parts.Count) { exit 0 } else { $newPath = ($filtered -join ';'); [Environment]::SetEnvironmentVariable('Path', $newPath, 'Machine'); exit 1 }" 2>nul
+if %errorlevel% equ 1 (
+    echo PHP directory removed from the system PATH.
+) else (
+    echo PHP directory was not found in the system PATH (or could not be removed).
+)
+
 echo.
-echo Services and certificate removed.
+echo Services, certificate and PATH entry removed.
 echo (Firefox policies.json and the files on disk are left in place.)
 if /I not "%~1"=="nopause" pause

@@ -25,7 +25,7 @@ if "%BASEDIR:~-1%"=="\" set "BASEDIR=%BASEDIR:~0,-1%"
 set "BASEDIR_FWD=%BASEDIR:\=/%"
 
 echo.
-echo === Step 1/10: check the Microsoft Visual C++ Redistributable (x64) ===
+echo === Step 1/11: check the Microsoft Visual C++ Redistributable (x64) ===
 REM Apache Lounge builds Apache with Visual Studio, so httpd.exe needs the
 REM Visual C++ 2017-2026 (v14) runtime (vcruntime140.dll etc.). The v14
 REM redistributable is an in-place cumulative update and backwards compatible,
@@ -70,11 +70,11 @@ if "!VC_NEEDED!"=="1" (
 )
 
 echo.
-echo === Step 2/10: unblock files ===
+echo === Step 2/11: unblock files ===
 powershell -NoProfile -Command "Get-ChildItem -Path '%BASEDIR%' -Recurse | Unblock-File" 2>nul
 
 echo.
-echo === Step 3/10: configure httpd.conf, my.ini and php.ini ===
+echo === Step 3/11: configure httpd.conf, my.ini and php.ini ===
 powershell -NoProfile -Command ^
   "(Get-Content -Raw '%BASEDIR%\apache24\conf\httpd.conf') -replace '__BASEDIR__', '%BASEDIR_FWD%' | Set-Content -NoNewline '%BASEDIR%\apache24\conf\httpd.conf'"
 powershell -NoProfile -Command ^
@@ -89,7 +89,7 @@ if not exist "%BASEDIR%\mariadb\conf.d" mkdir "%BASEDIR%\mariadb\conf.d"
 if not exist "%BASEDIR%\php\conf.d" mkdir "%BASEDIR%\php\conf.d"
 
 echo.
-echo === Step 4/10: check phpMyAdmin config and generate unique blowfish secret if needed ===
+echo === Step 4/11: check phpMyAdmin config and generate unique blowfish secret if needed ===
 set "PMA_CONF=%BASEDIR%\phpmyadmin\config.inc.php"
 if exist "%PMA_CONF%" (
     findstr /C:"__BLOWFISH_SECRET__" "%PMA_CONF%" >nul 2>&1
@@ -100,7 +100,7 @@ if exist "%PMA_CONF%" (
 )
 
 echo.
-echo === Step 5/10: initialise the MariaDB data directory ===
+echo === Step 5/11: initialise the MariaDB data directory ===
 if not exist "%BASEDIR%\mariadb\data\mysql" (
     "%BASEDIR%\mariadb\bin\mariadb-install-db.exe" ^
         --datadir="%BASEDIR%\mariadb\data" ^
@@ -111,7 +111,7 @@ if not exist "%BASEDIR%\mariadb\data\mysql" (
 )
 
 echo.
-echo === Step 6/10: install the MariaDB service ===
+echo === Step 6/11: install the MariaDB service ===
 sc query %SVC_MARIADB% >nul 2>&1
 if %errorlevel% neq 0 (
     "%BASEDIR%\mariadb\bin\mariadbd.exe" --install %SVC_MARIADB% ^
@@ -121,7 +121,7 @@ if %errorlevel% neq 0 (
 )
 
 echo.
-echo === Step 7/10: create a local SSL certificate (own root CA + leaf) ===
+echo === Step 7/11: create a local SSL certificate (own root CA + leaf) ===
 set "SSLDIR=%BASEDIR%\apache24\conf\ssl"
 if not exist "%SSLDIR%" mkdir "%SSLDIR%"
 
@@ -200,7 +200,7 @@ for %%D in (
 )
 
 echo.
-echo === Step 8/10: install the Apache service ===
+echo === Step 8/11: install the Apache service ===
 sc query %SVC_APACHE% >nul 2>&1
 if %errorlevel% neq 0 (
     "%BASEDIR%\apache24\bin\httpd.exe" -k install -n "%SVC_APACHE%" ^
@@ -229,7 +229,7 @@ if errorlevel 1 (
 
 
 echo.
-echo === Step 9/10: start MariaDB and set up phpMyAdmin's configuration storage ===
+echo === Step 9/11: start MariaDB and set up phpMyAdmin's configuration storage ===
 net start %SVC_MARIADB%
 
 REM Creates the "phpmyadmin" database + pma__* tables phpMyAdmin uses for
@@ -245,7 +245,27 @@ if exist "%BASEDIR%\phpmyadmin\sql\create_tables.sql" (
 )
 
 echo.
-echo === Step 10/10: start Apache ===
+echo === Step 10/11: add PHP directory to Windows system PATH ===
+set "PHPDIR=%BASEDIR%\php"
+powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+  "$phpDir = '%PHPDIR%';" ^
+  "$machinePath = [Environment]::GetEnvironmentVariable('Path', 'Machine');" ^
+  "if ([string]::IsNullOrEmpty($machinePath)) { $machinePath = '' }" ^
+  "$parts = $machinePath -split ';' | Where-Object { $_ -ne '' };" ^
+  "$exists = $parts | Where-Object { $_.TrimEnd('\') -ieq $phpDir.TrimEnd('\') };" ^
+  "if ($exists) { exit 0 } else { $newPath = ($parts -join ';'); if ($newPath) { $newPath = $newPath + ';' + $phpDir } else { $newPath = $phpDir }; [Environment]::SetEnvironmentVariable('Path', $newPath, 'Machine'); exit 2 }"
+if !errorlevel! equ 0 (
+    echo PHP directory is already in the system PATH.
+) else if !errorlevel! equ 2 (
+    echo PHP directory added to the system PATH.
+    echo Note: new command prompts will see the updated PATH; existing ones need to be restarted.
+) else (
+    echo WARNING: could not update the system PATH.
+    echo          If PHP fails to load DLLs/extensions, add "%PHPDIR%" to PATH manually.
+)
+
+echo.
+echo === Step 11/11: start Apache ===
 net start %SVC_APACHE%
 
 echo.
