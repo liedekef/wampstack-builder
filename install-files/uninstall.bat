@@ -1,4 +1,6 @@
 @echo off
+setlocal enabledelayedexpansion
+
 REM ============================================================================
 REM uninstall.bat - removes the Apache/MariaDB services again.
 REM Data and configuration are left alone; only the services are
@@ -39,11 +41,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
   "if ([string]::IsNullOrEmpty($machinePath)) { exit 0 }" ^
   "$parts = $machinePath -split ';' | Where-Object { $_ -ne '' };" ^
   "$filtered = $parts | Where-Object { $_.TrimEnd('\') -ine $phpDir.TrimEnd('\') };" ^
-  "if ($filtered.Count -eq $parts.Count) { exit 0 } else { $newPath = ($filtered -join ';'); [Environment]::SetEnvironmentVariable('Path', $newPath, 'Machine'); exit 1 }" 2>nul
-if %errorlevel% equ 1 (
+  "if ($filtered.Count -eq $parts.Count) { exit 0 } else { $newPath = ($filtered -join ';'); [Environment]::SetEnvironmentVariable('Path', $newPath, 'Machine'); exit 2 }" 2>nul
+if %errorlevel% equ 0 (
+    echo PHP directory was not in the system PATH.
+) else if %errorlevel% equ 2 (
     echo PHP directory removed from the system PATH.
 ) else (
-    echo PHP directory was not found in the system PATH (or could not be removed).
+    echo WARNING: could not update the system PATH.
 )
 
 echo.

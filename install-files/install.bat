@@ -70,6 +70,7 @@ if "!VC_NEEDED!"=="1" (
     )
 ) else (
     echo Visual C++ Redistributable x64 is already installed and not older, skipping.
+    del "%BASEDIR%\vc_redist.x64.exe" >nul 2>&1
 )
 
 echo.
