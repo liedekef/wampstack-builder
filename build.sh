@@ -18,10 +18,10 @@ set -euo pipefail
 #      - phpMyAdmin: https://www.phpmyadmin.net/downloads/ (all-languages.zip)
 #      - VC redistributable: Apache needs the correct one ...
 # ---------------------------------------------------------------------------
-APACHE_VER="2.4.69"
-APACHE_URL="https://www.apachelounge.com/download/VS18/binaries/httpd-${APACHE_VER}-261002-Win64-VS18.zip"
+APACHE_VER="2.4.71"
+APACHE_URL="https://www.apachelounge.com/download/VS18/binaries/httpd-${APACHE_VER}-261112-Win64-VS18.zip"
 
-PHP_VER="8.5.12"
+PHP_VER="8.5.12-1"
 PHP_URL="https://windows.php.net/downloads/releases/php-${PHP_VER}-Win32-vs17-x64.zip"
 
 MARIADB_VER="13.0.2"
